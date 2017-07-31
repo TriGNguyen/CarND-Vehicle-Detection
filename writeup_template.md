@@ -1,7 +1,3 @@
-##Writeup Template
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
----
 
 **Vehicle Detection Project**
 
@@ -75,7 +71,10 @@ p_feature_types=['hog']
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
 In code cell "In[9]", I trained a linear SVM using only HOG features over YCrCb color space. The color features are not useful since the training accuracy is already 100%, dev and test accuracy close to 100%. Results shown in code cell "In[10]".
+
 I also tried BaggingClassifier and RandomForest, yet the accuracy returned was lower.
+
+Prior to training, I scale the feature to 0 mean and unit variant.
 
 ![Sample predictions][image8]
 
@@ -85,16 +84,18 @@ I also tried BaggingClassifier and RandomForest, yet the accuracy returned was l
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
 In code cell "In[11]" and "In[12]", I execute window search over various size windows and search locations:
+
 [(window_size_y, window_size_x) , (search_span_min_y, search_span_max_y),  (search_span_min_x, search_span_max_x)] = [
+
     ((128, 128), (380, 560), (790, 1280)),
     ((128, 256), (380, 560), (790, 1280)),
     ((64, 128),  (380, 470), (790, 1280)),
     ((96, 192),  (380, 490), (790, 1280)),
     ((96, 128),  (380, 490), (790, 1280)),
-    
     ((264, 264),  (350, 650), (850, 1280)),
     ((200, 330),  (370, 600), (850, 1280)),
     ((260, 300),  (370, 600), (950, 1280))
+    
 ]
 
 First, I rescale the image such that (window_size_y, window_size_x) window map to (64, 64), which is the size of my training images. I compute the hog features over the serach locations (search_span_min_y, search_span_max_y) (search_span_min_x, search_span_max_x). I step window 1 cell each step, i.e. 2 adjacent windows will overlap 3/4, and collect my hog features for the widow from the hog features previously generated for the whole search image.
@@ -105,6 +106,10 @@ I decided the parameters by looking up video frame by frame, and mapped the car 
 
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
+
+I improve the clasify acurracy by augmented the fliping left-right training data. I also remove the color histogram from training features to avoid overfiting, since hog features already yield near 100% accuracy in train, dev and test sets.
+
+I have also experimented L1, L2 regulizer and limit training iterations in Linear SVM to prevent overfitting.
 
 Ultimately I searched on two scales using YCrCb 3-channel HOG features.  Here are some example images:
 
@@ -125,37 +130,28 @@ I recorded the positions of positive detections in each frame of the video. From
 
 Here's an example result showing the heatmap, the filtered image, and the image with bouding box from a series of frames of video:
 
-![alt text][image9]
+![Top left: Heat map. Top right: Thresholded on heatmap. Bottom: Original image with bounding box][image9]
 
 
-### Here are six frames and their corresponding heatmaps:
-
-![alt text][image10]
-![alt text][image11]
-![alt text][image12]
-![alt text][image13]
-![alt text][image14]
-![alt text][image15]
+### Here are six frames and their corresponding heatmaps and binary thresholded:
 
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image10]
-![alt text][image11]
-![alt text][image12]
-![alt text][image13]
-![alt text][image14]
-![alt text][image15]
+![Example 1][image10]
 
 
+![Example 2][image11]
 
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image10]
-![alt text][image11]
-![alt text][image12]
-![alt text][image13]
-![alt text][image14]
-![alt text][image15]
 
+![Example 3][image12]
+
+
+![Example 4][image13]
+
+
+![Example 5][image14]
+
+
+![Example 6][image15]
 
 
 ---
@@ -169,7 +165,9 @@ Here I'll talk about the approach I took, what techniques I used, what worked an
 1. I have the training data of car and non-car images; I then train a Linear SVM to classify car image. The positive training mostly contain the full image of the back, the right and the left of the car. If a car is comming to the camera frame, and half of it appear in the image, the classifier would face dificulties in detecting half car window, since it never observes it in the training data. I have attempted to augmented half car image, yet has not been able to training it due to computation limitation. With more computation power, I can train the classifier on augmented data.
 
 2. I perform window search with stepping 1 cell at a time. With stepping, the search space becomes non-continous, and the results depends on if I can step corectly on a window containing a car. This approach yield trade off between the size of the step and the precision of the prediciton. The classifier will perform well if I luckly step on a window having the full car image similar to the training examples.
-On the other hand, I also search various car sizes pre-selected. Yet, in practice, we may not pre-select all car sizes.
+
+On the other hand, I also search various car sizes pre-selected. Yet, in practice, we may not be able to pre-select all car sizes.
+
 Therefore, I would suggest trying a better models independent from window size and step size such as Regional based Convoultional Network.
 
 3. Sequence of frames has not been utilized in my approach; I could employ them into a deep learning model architecture such as Recurent Network to capture a vector representing a frame.
