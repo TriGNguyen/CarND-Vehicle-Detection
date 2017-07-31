@@ -128,6 +128,8 @@ Here's a [link to my video result](./project_video_out.mp4)
 
 I recorded the positions of positive detections in each frame of the video. From the positive detections I created a heatmap. I applied Gausian blur as a voting mechanism accross windows to combine overllapping bounding boxes. I thresholded that Gausian blur heatmap to identify vehicle positions and filter false positives. 
 
+I code cell "In[90]", I have also implemented exponential decay to smooth the heatmap accross frames.
+
 Here's an example result showing the heatmap, the filtered image, and the image with bouding box from a series of frames of video:
 
 ![Top left: Heat map. Top right: Thresholded on heatmap. Bottom: Original image with bounding box][image9]
